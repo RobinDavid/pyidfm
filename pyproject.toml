@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyidfm"
+version = "0.1.0"
+description = "AI-ready Python API wrapper for Île de France mobilités open-data API"
+readme = "README.md"
+requires-python = ">=3.9"
+license = "MIT"
+authors = [
+    {name = "Robin David", email = "dev.robin.david@gmail.com"}
+]
+keywords = ["idfm", "api", "transport", "paris", "ile-de-france", "schedules", "traffic"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Internet",
+]
+dependencies = [
+    "requests>=2.28.0",
+    "click>=8.0",
+    "rich>=13.0",
+]
+
+[project.scripts]
+pyidfm = "pyidfm.__main__:main"
+
+[project.optional-dependencies]
+dev = [
+    "sphinx>=5.0",
+    "sphinx-rtd-theme>=1.0",
+]
+
+[project.urls]
+"Repository" = "https://github.com/RobinDavid/pyidfm"
+"Bug Tracker" = "https://github.com/RobinDavid/pyidfm/issues"
+
+[tool.setuptools]
+packages = ["pyidfm"]
+
+[tool.setuptools.package-dir]
+"" = "."
+
+
