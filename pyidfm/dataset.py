@@ -157,6 +157,7 @@ class Dataset:
 
         :raise requests.HTTPError: If any of the HTTP requests fail
         """
+        logging.info("Updating local data with IDFM datasets...")
         DATA_DIR.mkdir(parents=True, exist_ok=True)
 
         for url, fname in [

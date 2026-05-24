@@ -126,6 +126,20 @@ def search_stops(line_id: str, as_json: bool):
     console.print(table)
 
 
+# ── update-data ──────────────────────────────────────────────────────────────
+
+@cli.command("update-data")
+def update_data():
+    """Download/refresh the local IDFM static datasets (lines, stops, relations…)."""
+    dataset = Dataset()
+    try:
+        dataset.update_data()
+    except Exception as e:
+        console.print(f"[red]Failed to update datasets: {e}[/red]")
+        sys.exit(1)
+    console.print("[green]Local IDFM datasets updated.[/green]")
+
+
 # ── traffic ──────────────────────────────────────────────────────────────────
 
 @cli.command("traffic")
