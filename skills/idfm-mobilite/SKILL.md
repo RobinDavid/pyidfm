@@ -32,12 +32,20 @@ If `IDFM_API_KEY` is not set when a live command is invoked, ask the user for it
 
 ## Core flow
 
-Almost every question resolves to this three-step pattern. **Always pass `--json` so output is machine-parseable.**
+Almost every question resolves to this three-step pattern. **Always use the CLI command line**; reach for the Python API only as a last resort when scripting in Python is strictly required (see [Python API — last resort](#python-api--last-resort) at the end of this document).
+
+**Output format:**
+- **Standard output** (default, no flag) — formatted Rich table; use this when reporting information to the user.
+- **`--json`** — machine-parseable JSON array; use this when you need to extract a specific value (an ID to pass to the next command, a departure time, a status).
 
 ```
+# Steps 1 & 2: use --json to extract IDs for chaining
 1. pyidfm search lines [NAME_FILTER] --mode <metro|rail|tram|bus> --json   → find LINE_ID
 2. pyidfm search stops <LINE_ID> [NAME_FILTER] --json                      → find STOP_ID (exchange_area_id)
-3. pyidfm traffic --stop-id <STOP_ID> --line-id <LINE_ID> --json           → live departures
+
+# Step 3: standard output to report to user; --json to extract a specific field
+3. pyidfm traffic --stop-id <STOP_ID> --line-id <LINE_ID>                  → live departures (table)
+   pyidfm traffic --stop-id <STOP_ID> --line-id <LINE_ID> --json           → live departures (JSON)
 ```
 
 Both `search` commands take an optional positional `NAME_FILTER` (case-insensitive substring match on the `name` field). Use it whenever the user already named a line or stop, to keep the JSON small and parseable.
@@ -76,18 +84,98 @@ For disruptions, replace step 3 with `pyidfm line-report <LINE_ID> --json`.
 Full flag reference: [references/cli-reference.md](references/cli-reference.md).
 Worked-out task recipes: [references/workflows.md](references/workflows.md).
 
-## Output shape — `pyidfm traffic --json`
+## JSON output samples
 
-Returns a JSON array of departure objects. Key fields:
+### `pyidfm search lines --json`
 
+```json
+[
+  { "mode": "rail", "name": "D", "id": "STIF:Line::C01728:" },
+  { "mode": "rail", "name": "A", "id": "STIF:Line::C01742:" }
+]
+```
+
+### `pyidfm search stops <LINE_ID> --json`
+
+Use `exchange_area_id` (not `stop_id`) when calling `traffic`.
+
+```json
+[
+  {
+    "name": "Montgeron - Crosne",
+    "stop_id": "STIF:StopPoint:Q:471656:",
+    "x": 2.4611,
+    "y": 48.7053,
+    "zip_code": "91230",
+    "city": "Montgeron",
+    "exchange_area_id": "STIF:StopArea:SP:47684:",
+    "exchange_area_name": "Montgeron - Crosne"
+  }
+]
+```
+
+### `pyidfm traffic --json`
+
+Returns an array of departure objects. Key fields:
 - `line_id` — `STIF:Line::C…`
-- `schedule` — ISO 8601 UTC datetime (may be `null` if unknown)
+- `schedule` — ISO 8601 UTC datetime (may be `null` if unknown); convert to Paris time when relaying to user (the standard table output already does this)
 - `status` — `onTime`, `delayed`, `cancelled`, `arrived`, `missed`, `notExpected`, `early`, `noReport`, `unknown`
 - `destination_name`, `direction` — strings (direction can fall back to destination)
 - `stop_point_name`, `platform`, `at_stop` (bool)
-- `note`, `call_note` — free-text annotations (e.g. "Métro à l'approche")
+- `note`, `call_note` — free-text annotations (e.g. train code, "Métro à l'approche")
 
-When relaying departures to the user, convert `schedule` to local Paris time (the CLI's non-JSON output already does this; the JSON form keeps UTC).
+```json
+[
+  {
+    "line_id": "STIF:Line::C01728:",
+    "stop_point_name": "Montgeron - Crosne",
+    "destination_name": "Goussainville",
+    "destination_id": "STIF:StopArea:SP:47921:",
+    "direction": "Goussainville",
+    "schedule": "2026-05-24T08:28:03+00:00",
+    "at_stop": false,
+    "platform": "2B",
+    "status": "onTime",
+    "note": "FACA",
+    "call_note": ""
+  },
+  {
+    "line_id": "STIF:Line::C01728:",
+    "stop_point_name": "Montgeron - Crosne",
+    "destination_name": "Melun",
+    "destination_id": "STIF:StopArea:SP:47909:",
+    "direction": "Melun",
+    "schedule": "2026-05-24T08:33:59+00:00",
+    "at_stop": false,
+    "platform": "1B",
+    "status": "onTime",
+    "note": "ZHCO",
+    "call_note": ""
+  }
+]
+```
+
+### `pyidfm line-report <LINE_ID> --json`
+
+`periods` is a list of `[start_iso, end_iso]` pairs (Paris timezone).
+
+```json
+[
+  {
+    "id": "NAVITIA:disruption:abc123:",
+    "name": "Travaux sur la ligne D",
+    "message": "Des travaux sont prévus entre Juvisy et Melun les week-ends de mai.",
+    "periods": [
+      ["2026-05-17T22:00:00+02:00", "2026-05-18T06:00:00+02:00"]
+    ],
+    "severity": 2,
+    "effect": "REDUCED_SERVICE",
+    "category": "Travaux",
+    "cause": "travaux",
+    "type": "trip"
+  }
+]
+```
 
 ## Pitfalls
 
@@ -95,9 +183,11 @@ When relaying departures to the user, convert `schedule` to local Paris time (th
 - **Elevator failures** are filtered out by default on `line-report`; pass `--include-elevators` if the user asks about accessibility.
 - **Stop disambiguation** — multiple cities have stops named "Châtelet" or "République". When the user names a stop, always show them the candidate `name` + `city` from `search stops --json` and let them confirm before calling `traffic`.
 - **Stale data** — if `search stops` returns nothing for a known line, run `pyidfm update-data` and retry.
-- **Avoid the non-JSON output for parsing** — it uses Rich tables intended for humans. Always `--json`.
+- **Choose the right output format** — standard output (no flag) renders a Rich table suitable for reporting to the user; use `--json` only when extracting a specific field or chaining commands.
 
-## Python API (when scripting alongside the CLI)
+## Python API — last resort
+
+Use the CLI for all queries. Use this API only when you need to integrate `pyidfm` into a Python script and the CLI output cannot be piped easily.
 
 ```python
 from pyidfm.idfm import IDFMApi

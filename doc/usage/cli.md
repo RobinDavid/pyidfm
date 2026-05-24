@@ -85,10 +85,15 @@ $ pyidfm messages --line-id "STIF:Line::C01742:" --channel Perturbation
 
 ## Usage from LLM agents
 
-The CLI is the recommended entry point for LLM agents: every command supports
-`--json` so output is straightforward to parse, and a typical flow is just
-three calls — `search lines` → `search stops` → `traffic`
-(or `line-report` / `messages`).
+The CLI is the recommended entry point for LLM agents. A typical flow is three
+calls — `search lines` → `search stops` → `traffic` (or `line-report` /
+`messages`).
+
+**Output format guidance:**
+- **Standard output** (default) — formatted table; use this when reporting
+  information to the user.
+- **`--json`** — machine-parseable array; use this when extracting a specific
+  value (an ID to pass to the next command, a departure time, a status).
 
 See [`SKILL.md`](https://github.com/RobinDavid/pyidfm/blob/main/SKILL.md) in
 the repository for the agent skill packaging used during development.
