@@ -5,3 +5,5 @@ __pycache__
 lines.json
 stops.json
 .vscode
+doc/_build/
+site/
