@@ -59,6 +59,7 @@ def search():
 
 
 @search.command("lines")
+@click.argument("name_filter", required=False, default=None, metavar="[NAME_FILTER]")
 @click.option(
     "--mode",
     type=click.Choice([t.value for t in TransportType]),
@@ -66,16 +67,20 @@ def search():
     help="Filter by transport mode.",
 )
 @click.option("--json", "as_json", is_flag=True, default=False, help="Output as JSON.")
-def search_lines(mode: str | None, as_json: bool):
-    """List available lines, optionally filtered by transport mode."""
+def search_lines(name_filter: str | None, mode: str | None, as_json: bool):
+    """List available lines, optionally filtered by transport mode and/or a
+    case-insensitive substring match on the line name (NAME_FILTER)."""
     dataset = Dataset()
 
     modes = [mode] if mode else list(dataset.lines.keys())
+    needle = name_filter.lower() if name_filter else None
 
     results = []
     for m in modes:
         if m in dataset.lines:
             for name, line_id in dataset.lines[m].items():
+                if needle and needle not in name.lower():
+                    continue
                 results.append({"mode": m, "name": name, "id": line_id})
 
     if as_json:
@@ -93,9 +98,12 @@ def search_lines(mode: str | None, as_json: bool):
 
 @search.command("stops")
 @click.argument("line_id")
+@click.argument("name_filter", required=False, default=None, metavar="[NAME_FILTER]")
 @click.option("--json", "as_json", is_flag=True, default=False, help="Output as JSON.")
-def search_stops(line_id: str, as_json: bool):
-    """List stops for a given LINE_ID (use 'search lines' to find IDs)."""
+def search_stops(line_id: str, name_filter: str | None, as_json: bool):
+    """List stops for a given LINE_ID (use 'search lines' to find IDs).
+
+    Optional NAME_FILTER is a case-insensitive substring match on the stop name."""
     # dataset = Dataset()
 
     idfm = IDFMApi(None)
@@ -105,8 +113,17 @@ def search_stops(line_id: str, as_json: bool):
         click.echo(f"No stops found for line ID '{line_id}'.", err=True)
         sys.exit(1)
 
+    if name_filter:
+        needle = name_filter.lower()
+        stops = [s for s in stops if s.name and needle in s.name.lower()]
+        if not stops:
+            click.echo(
+                f"No stops matching '{name_filter}' on line '{line_id}'.", err=True
+            )
+            sys.exit(1)
+
     if as_json:
-        print(json.dumps(stops, indent=2))
+        print(_to_json(stops))
         return
 
     table = Table(title=f"Stops for line {line_id}")

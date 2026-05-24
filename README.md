@@ -119,8 +119,8 @@ for r in reports:
 The CLI is the recommended entry point for LLM agents: every command supports
 `--json` so output is straightforward to parse, and a typical flow is just
 three calls — `search lines` → `search stops` → `traffic` (or `line-report` /
-`messages`). See [`SKILL.md`](../SKILL.md) in this repository for the agent
-skill packaging used during development.
+`messages`). See [`SKILL.md`](skills/idfm-mobilite/SKILL.md) in this repository
+for the agent skill packaging used during development.
 
 
 ## License

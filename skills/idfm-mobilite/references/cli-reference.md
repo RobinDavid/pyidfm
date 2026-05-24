@@ -13,20 +13,22 @@ Download / refresh the local static datasets (lines, stops, line→stop relation
 
 - No flags. No API key required. Safe to call once at session start if static lookups are failing.
 
-## `pyidfm search lines [--mode MODE] [--json]`
+## `pyidfm search lines [NAME_FILTER] [--mode MODE] [--json]`
 
 List static lines.
 
+- `NAME_FILTER` — optional positional. Case-insensitive substring match on the line `name`. The `name` is the short label only — `1`, `7B`, `A`, `T3`, `H`, `21` — **not** `Métro 1` / `RER A` / `Tram T3`. Substring means `1` also matches `10`–`14`; combine with `--mode` to disambiguate (e.g. `--mode metro 1` vs. `--mode tram T1`). Omit to list every line.
 - `--mode` — one of `metro`, `tram`, `rail`, `bus`. Omit to list every mode.
 - `--json` — JSON array of `{mode, name, id}`.
 
 `id` is the form to pass to `search stops` and as `--line-id`/positional arg of `line-report`.
 
-## `pyidfm search stops LINE_ID [--json]`
+## `pyidfm search stops LINE_ID [NAME_FILTER] [--json]`
 
 List stops of a line.
 
 - `LINE_ID` — positional, e.g. `C01742` or `STIF:Line::C01742:` (both accepted).
+- `NAME_FILTER` — optional positional. Case-insensitive substring match on the stop `name` (e.g. `Châtelet`, `République`). Omit to list every stop on the line. Exits non-zero if nothing matches.
 - `--json` — JSON array of stop dataclasses. Notable fields: `name`, `city`, `stop_id` (StopPoint:Q), `exchange_area_id` (StopArea:SP), `x`, `y`, `zip_code`.
 
 Use `exchange_area_id` as `--stop-id` for `traffic` unless you need a specific platform.

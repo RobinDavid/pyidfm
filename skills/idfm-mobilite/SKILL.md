@@ -35,10 +35,20 @@ If `IDFM_API_KEY` is not set when a live command is invoked, ask the user for it
 Almost every question resolves to this three-step pattern. **Always pass `--json` so output is machine-parseable.**
 
 ```
-1. pyidfm search lines --mode <metro|rail|tram|bus> --json    → find LINE_ID
-2. pyidfm search stops <LINE_ID> --json                       → find STOP_ID (exchange_area_id)
-3. pyidfm traffic --stop-id <STOP_ID> --line-id <LINE_ID> --json  → live departures
+1. pyidfm search lines [NAME_FILTER] --mode <metro|rail|tram|bus> --json   → find LINE_ID
+2. pyidfm search stops <LINE_ID> [NAME_FILTER] --json                      → find STOP_ID (exchange_area_id)
+3. pyidfm traffic --stop-id <STOP_ID> --line-id <LINE_ID> --json           → live departures
 ```
+
+Both `search` commands take an optional positional `NAME_FILTER` (case-insensitive substring match on the `name` field). Use it whenever the user already named a line or stop, to keep the JSON small and parseable.
+
+The line `name` is the short label only — `"1"`, `"7B"`, `"A"`, `"T3"`, `"H"`, `"21"` — **not** `"Métro 1"`, `"RER A"`, or `"Tram T3"`. Combine with `--mode` to disambiguate when the label is reused across modes (e.g. metro `1` vs. tram `T1`, or the short bus number `1`). Examples:
+
+- `pyidfm search lines 1 --mode metro --json` → just metro line 1 (substring also matches 10–14, so inspect the JSON or tighten with `--mode`).
+- `pyidfm search lines A --mode rail --json` → RER A.
+- `pyidfm search lines T3 --mode tram --json` → trams T3a / T3b.
+
+The stop `NAME_FILTER` matches the `name` field exactly as it appears in the dataset (e.g. `Châtelet`, `République`, `Gare de Lyon`).
 
 For disruptions, replace step 3 with `pyidfm line-report <LINE_ID> --json`.
 
