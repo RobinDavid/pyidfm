@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyidfm"
-version = "0.0.2"
+version = "0.0.3"
 description = "AI-ready Python API wrapper for Île de France mobilités open-data API"
 readme = "README.md"
 requires-python = ">=3.9"

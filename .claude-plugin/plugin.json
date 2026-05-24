@@ -1,0 +1,22 @@
+{
+  "name": "pyidfm",
+  "version": "0.1.0",
+  "description": "Île-de-France public transport (Metro, RER, Transilien, Tram, Bus): live next-departures, traffic disruptions, and messages via the pyidfm CLI.",
+  "author": {
+    "name": "Robin David",
+    "email": "dev.robin.david@gmail.com"
+  },
+  "license": "MIT",
+  "homepage": "https://github.com/RobinDavid/pyidfm",
+  "keywords": [
+    "idfm",
+    "ile-de-france",
+    "paris",
+    "transit",
+    "metro",
+    "rer",
+    "transilien",
+    "bus",
+    "tram"
+  ]
+}
